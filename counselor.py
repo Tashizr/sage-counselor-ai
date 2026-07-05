@@ -1,4 +1,4 @@
-import random, re, os, json
+import random, re, os
 import numpy as np
 import pandas as pd
 import joblib
@@ -22,76 +22,94 @@ SLANG = {
 SHORT_ANSWERS = {"yeah", "nah", "idk", "maybe", "sure", "kinda", "ok", "okay", "ye", "ig", "i guess", "not sure"}
 
 AMBIGUOUS = [
-    (r"\bkilled\s+(a\s+)?(someone|my|him|her|them)\b", "violence"),
-    (r"\bmurder\w*\s+(a\s+)?(someone|my|him|her|them)\b", "violence"),
-    (r"\brobbed\s+(a\s+)?(bank|store|someone)\b", "crime"),
+    (r"\bkill(s|ed)?\s+(a\s+)?(someone|somebody|my|him|her|them|a\s+guy|a\s+man|a\s+woman)\b", "violence"),
+    (r"\bmurder(s|ed|ing)?\s+(a\s+)?(someone|somebody|my|him|her|them)\b", "violence"),
+    (r"\brob(s|bed|bing)?\s+(a\s+)?(bank|store|someone|somebody)\b", "crime"),
     (r"\bstole?\s+(a\s+)?(car|money|something)\b", "crime"),
-    (r"\bkidnapped\b", "violence"),
-    (r"\bshoot\w*\s+(up|someone|a\s+place)\b", "violence"),
-    (r"\b(hacked|hack)\s+(into|a\s+system)\b", "crime"),
+    (r"\bkidnap(ped|ping)?\b", "violence"),
+    (r"\bshoot(s|ing)?\s+(up|someone|a\s+place|a\s+school)\b", "violence"),
+    (r"\b(hack(s|ed|ing)?)\s+(into|a\s+system|their\s+account)\b", "crime"),
+    (r"\b(fight|riot|revolution)\b", "violence"),
+    (r"\bburn(s|ed|ing)?\s+(down\s+)?(a\s+)?(house|building|car)\b", "violence"),
+    (r"\b(rape|raped|raping)\b", "violence"),
+    (r"\b(torture|tortured|torturing)\b", "violence"),
+    (r"\b(bomb|bombed|bombing)\s+(a|the|this|their)\b", "violence"),
 ]
 
-# Pandas-driven response templates
 TOPICS = ["anxiety", "sadness", "anger", "stress", "sleep", "relationships", "work", "confusion", "positive", "general"]
 
 _response_data = pd.DataFrame({
     "topic": TOPICS,
+    # Shorter, more natural reflections
     "reflection": [
-        ["It sounds like there's a lot of weight in what you're describing.", "I wonder if this has been sitting with you for a while.", "That worry sounds really present for you right now.", "It seems like your mind is working hard to keep you alert."],
-        ["It sounds like there's a heaviness that's hard to put into words.", "I wonder if this has been weighing on you more than you let on.", "It seems like there's a deep ache in what you're sharing.", "That kind of sadness sounds like it runs deep."],
-        ["It sounds like something really got to you.", "I wonder if there's more underneath that frustration.", "It seems like this touched something important.", "That kind of anger usually points to something that matters."],
-        ["It sounds like you're carrying a lot right now.", "I wonder if this has been building for a while.", "It seems like there's a lot pulling at your attention.", "That kind of pressure sounds exhausting."],
-        ["It sounds like your mind doesn't quiet down when you need it to.", "I wonder if there's something your mind is trying to process.", "It seems like rest has been hard to come by.", "That struggle to sleep sounds really draining."],
-        ["It sounds like there's something shifting in a relationship that matters to you.", "I wonder if this has been on your mind for a while.", "It seems like this connection means a lot to you.", "That kind of tension is hard to carry."],
-        ["It sounds like work has been taking a lot out of you.", "I wonder if this has been building up over time.", "It seems like there's a mismatch between what you give and what you get.", "That kind of work stress can affect everything else too."],
-        ["It sounds like you're at a place where things aren't clear yet.", "I wonder if this uncertainty has been unsettling.", "It seems like you're weighing something important.", "That kind of not-knowing is genuinely uncomfortable."],
-        ["It sounds like something good is happening for you.", "I wonder if this has been a long time coming.", "It seems like things are moving in a good direction.", "That kind of positive energy is really nice to hear."],
-        ["It sounds like there's something on your mind.", "I wonder if this has been sitting with you for a while.", "It seems like this is important to you.", "I appreciate you sharing that with me."],
+        ["That sounds like a lot to carry.", "I hear you. That kind of worry can be exhausting.", "That anxiety sounds really real.", "It makes sense you'd feel on edge."],
+        ["That sounds heavy.", "I'm sorry you're feeling this way.", "Sadness like that doesn't just go away.", "That takes a lot of courage to say."],
+        ["Something clearly got under your skin.", "That frustration sounds valid.", "I hear the anger in what you're saying.", "That's a real feeling."],
+        ["You're juggling a lot right now.", "That pressure sounds overwhelming.", "It's okay to feel stretched thin.", "That's a lot on your plate."],
+        ["Sleep struggles are the worst.", "That sounds really draining.", "I hear you. Restless nights take a toll.", "That's hard to deal with night after night."],
+        ["That sounds painful.", "Relationship stuff cuts deep.", "I hear you. That tension is real.", "That kind of hurt lingers."],
+        ["Work can really wear you down.", "That sounds frustrating.", "I hear you. That's a tough spot.", "That mismatch hurts."],
+        ["It's okay to not have all the answers.", "That uncertainty is uncomfortable.", "I hear you. Being stuck is hard.", "That's a tough place to be."],
+        ["That's really nice to hear.", "I'm glad you're feeling that way.", "That's wonderful.", "Good for you. You deserve that."],
+        ["I hear you.", "Thanks for sharing that.", "I'm here.", "Tell me more."],
     ],
+    # Shorter validations
     "validation": [
-        ["It makes sense you'd feel that way.", "Anxiety is your body's way of trying to protect you, even when it overdoes it."],
-        ["It makes sense you'd feel that way.", "Sadness is a natural response when something matters to us."],
-        ["Anyone might feel that way in your position.", "Anger often shows us when something we care about has been crossed."],
-        ["Anyone would feel stretched under that load.", "It makes sense to feel overwhelmed with everything on your plate."],
-        ["It makes sense that would leave you feeling drained.", "Sleep struggles often reflect how full our minds are during the day."],
-        ["It makes sense that would hurt.", "Relationships touch such a deep part of us."],
-        ["It makes sense that would weigh on you.", "So much of our identity gets tied up in work."],
-        ["It makes sense to feel uncertain right now.", "Confusion often means something important is shifting."],
-        ["That's really nice to hear.", "It's good you're noticing that."],
-        [""],
+        ["That makes total sense.", "Anxiety can be really overwhelming."],
+        ["Of course you'd feel that way.", "That kind of sadness is real."],
+        ["Anyone would feel that way.", "That anger makes sense."],
+        ["That's a lot for anyone.", "No wonder you feel stretched."],
+        ["That would drain anyone.", "Of course you're tired of it."],
+        ["That makes sense.", "Of course that hurts."],
+        ["That would frustrate anyone.", "No wonder you feel that way."],
+        ["Totally understandable.", "That kind of uncertainty is tough."],
+        ["Love hearing that.", "You should feel good about that."],
+        ["", ""],
     ],
+    # Shorter, more conversational questions
     "question": [
-        ["What does that anxiety feel like in your body right now?", "When does that worry tend to show up most?", "What's the first thing that comes to mind when you think about what's worrying you?"],
-        ["When did that heavy feeling first start showing up?", "What does that sadness need you to understand about it?", "Is there something specific that triggered this, or has it been building?"],
-        ["What happened that sparked this frustration?", "What does this anger want you to protect?", "What would need to happen for you to feel heard about this?"],
-        ["What part of this feels the heaviest right now?", "If you could set one thing down today, what would it be?", "What's pulling at your attention most urgently?"],
-        ["What's going through your mind when you're lying awake?", "How long has this pattern been going on?", "Is it hard to fall asleep, or hard to stay asleep?"],
-        ["What do you find yourself needing that you're not getting right now?", "What kind of conversation have you been wanting to have?", "How long has this dynamic been building?"],
-        ["What part of your work drains you the most?", "What would a better version of your work life look like?", "Is it the work itself, or the environment around it?"],
-        ["What feels most unclear when you sit with it?", "What's the heart of what you're trying to figure out?", "What options are you weighing right now?"],
-        ["What's contributing to that good feeling?", "What helped bring this about?", "How does it feel in your body when you experience this?"],
-        ["What's coming up for you as you share that?", "What feels most important about this to you?", "What made you decide to bring this up today?"],
+        ["What does that feel like for you?", "When does it hit you the hardest?"],
+        ["When did this start?", "What's weighing on you most?"],
+        ["What set this off?", "What would help you feel heard?"],
+        ["What's the hardest part?", "If you could drop one thing, what would it be?"],
+        ["What's keeping you up?", "How long has this been going on?"],
+        ["What do you need right now?", "How long has this been building?"],
+        ["What's draining you most?", "What would change look like?"],
+        ["What feels unclear?", "What's the core of it for you?"],
+        ["What's making you feel good?", "What brought this on?"],
+        ["What's on your mind?", "What made you reach out?"],
     ],
+    # Shorter soft endings
     "soft_ending": [
-        ["I'm here with you.", "We can sit with this for a while.", "Take your time."],
-        ["I'm here with you.", "We can stay with this for a bit.", "Take your time."],
-        ["I'm here with you.", "Let that sit for a moment.", "Take your time."],
-        ["We can slow down here.", "Take your time.", "I'm here with you."],
-        ["Take your time.", "We can let that sit.", "I'm here with you."],
-        ["I'm here with you.", "Take your time with this.", "We can sit with this."],
-        ["Take your time.", "I'm here with you.", "We can slow down here."],
-        ["Take your time.", "We can sit with the question.", "I'm here with you."],
-        ["That's really nice.", "I'm glad for you.", "That's good to hear."],
-        ["Take your time.", "I'm here with you.", "We can sit with this."],
+        ["I'm here with you.", "Take your time."],
+        ["I'm here with you.", "No rush."],
+        ["I'm right here.", "Take your time."],
+        ["No rush.", "I'm here."],
+        ["Take your time.", "I'm listening."],
+        ["I'm here.", "No pressure."],
+        ["Take your time.", "I'm here."],
+        ["No rush.", "I'm listening."],
+        ["That's great.", "Glad to hear it."],
+        ["I'm here.", "Take your time."],
     ],
 })
 
 EMOTION_WORDS = {
-    "anxiety": ["anxious", "worried", "nervous", "panic", "scared", "afraid", "dread"],
-    "sadness": ["sad", "sorrow", "grief", "depressed", "lonely", "empty"],
-    "anger": ["angry", "mad", "furious", "annoyed", "irritated"],
-    "stress": ["stressed", "overwhelmed", "burned out", "pressure"],
+    "anxiety": ["anxious", "worried", "nervous", "panic", "scared", "afraid", "dread", "tense", "on edge"],
+    "sadness": ["sad", "sorrow", "grief", "depressed", "lonely", "empty", "crying", "tears", "down", "blue", "low", "awful", "bad", "miserable"],
+    "anger": ["angry", "mad", "furious", "annoyed", "irritated", "rage", "pissed"],
+    "stress": ["stressed", "overwhelmed", "burned out", "pressure", "exhausted", "swamped"],
     "confusion": ["confused", "lost", "unsure", "torn"],
+    "positive": ["great", "good", "happy", "amazing", "wonderful", "grateful", "thankful", "excited", "proud", "blessed", "hopeful", "optimistic", "content", "peaceful", "joyful"],
+}
+
+# Mood check-in phrases map to topics directly
+MOOD_MAP = {
+    "feeling great": "positive", "feeling good": "positive", "feeling happy": "positive",
+    "feeling amazing": "positive", "feeling wonderful": "positive",
+    "feeling okay": "general", "feeling alright": "general",
+    "feeling low": "sadness", "feeling bad": "sadness", "feeling awful": "sadness",
+    "feeling terrible": "sadness", "feeling down": "sadness", "feeling blue": "sadness",
 }
 
 NAME_PATTERNS = [
@@ -109,6 +127,23 @@ EMOTION_SKIP = {
     "worried", "depressed", "lonely", "tired", "exhausted", "confused",
     "lost", "empty", "hopeless", "hurt", "broken", "numb", "fine",
     "okay", "good", "bad", "great", "terrible", "feeling", "feel",
+    "awesome", "amazing", "wonderful", "fantastic", "pretty", "really",
+}
+
+STOP_WORDS = {
+    "i", "me", "my", "we", "you", "he", "she", "it", "a", "an", "the",
+    "and", "or", "but", "is", "am", "are", "was", "have", "has", "do",
+    "not", "no", "so", "if", "all", "just", "can", "will", "to", "in",
+    "of", "for", "on", "at", "by", "from", "with", "about", "been",
+    "being", "be", "that", "this", "these", "those", "what", "when",
+    "where", "how", "why", "which", "who", "whom", "whose",
+    "very", "too", "also", "just", "really", "quite", "pretty",
+    "don't", "dont", "cant", "won't", "wont", "isn't", "isnt",
+    "wasn't", "wasnt", "aren't", "arent", "didn't", "didnt",
+    "i'm", "im", "you're", "youre", "he's", "hes", "she's", "shes",
+    "it's", "its", "we're", "were", "they're", "theyre",
+    "feeling", "feel", "felt", "like", "want", "need", "know",
+    "think", "think", "going", "come", "make", "made",
 }
 
 
@@ -135,7 +170,7 @@ class Counselor:
         text = text.strip()
         if not text:
             self.history.append(text)
-            return "I'm here. You can take your time."
+            return "I'm here whenever you're ready."
         self.history.append(text)
 
         if detect_crisis(text):
@@ -148,21 +183,20 @@ class Counselor:
             orig = self.awaiting
             self.awaiting = None
             low = text.lower()
-            if any(w in low for w in {"nah", "no", "fictional", "hypothetical", "story", "pretend", "made up"}):
-                return "I appreciate you clarifying. What's actually on your mind?"
-            if any(w in low for w in {"real", "yes", "actually", "happened", "serious"}) and len(low.split()) < 8:
+            if any(w in low for w in {"nah", "no", "fictional", "hypothetical", "story", "pretend", "made up", "joking", "joke", "not real"}):
+                return "Got it, no worries. What's really on your mind?"
+            if any(w in low for w in {"real", "yes", "actually", "happened", "serious", "fr", "deadass"}) and len(low.split()) < 8:
                 return f"Thank you for being honest with me.\n\n{self._generate(orig)}"
             return self._generate(text)
 
         for pat, cat in AMBIGUOUS:
             if re.search(pat, text.lower()):
                 self.awaiting = text
-                start = random.choice([
+                return random.choice([
                     "Can you help me understand what you mean by that?",
-                    "I want to make sure I understand you correctly.",
+                    "I want to make sure I understand you correctly. Are you describing something real, or something else?",
+                    "Before I respond — can you clarify what you're sharing?",
                 ])
-                follow = "Are you describing something that actually happened, or something else?"
-                return f"{start} {follow}"
 
         if self.user_name is None:
             name = self._extract_name(text)
@@ -213,6 +247,13 @@ class Counselor:
         idx = np.argmax(probs, axis=1)[0]
         return self.classes_[idx], float(np.max(probs, axis=1)[0])
 
+    def _predict_with_mood_override(self, text):
+        low = text.lower()
+        for phrase, topic in MOOD_MAP.items():
+            if phrase in low:
+                return topic, 0.95
+        return self._predict(text)
+
     def _translate_slang(self, text):
         out = text.lower()
         for phrase, meaning in sorted(SLANG.items(), key=lambda x: -len(x[0])):
@@ -225,54 +266,73 @@ class Counselor:
 
     def _detect_emotions(self, text):
         low = text.lower()
-        return [t for t, words in EMOTION_WORDS.items() if any(w in low for w in words)][:2]
+        found = []
+        for t, words in EMOTION_WORDS.items():
+            if any(w in low for w in words):
+                found.append(t)
+        return found[:2]
 
     def _key_phrases(self, text):
-        stop = {"i", "me", "my", "we", "you", "he", "she", "it", "a", "an", "the", "and", "or", "but",
-                "is", "am", "are", "was", "have", "has", "do", "not", "no", "so", "if", "all", "just",
-                "can", "will", "to", "in", "of", "for", "on", "at", "by", "from", "with", "about"}
         words = [w.strip(",.!?;:'\"") for w in text.lower().split()
-                 if w.strip(",.!?;:'\"") not in stop and len(w.strip(",.!?;:'\"")) > 2]
+                 if w.strip(",.!?;:'\"") not in STOP_WORDS and len(w.strip(",.!?;:'\"")) > 2]
         random.shuffle(words)
-        return words[:3]
+        return words[:2]
 
     def _generate(self, text):
         translated = self._translate_slang(text)
-        topic, _ = self._predict(translated)
+        topic, _ = self._predict_with_mood_override(translated)
         row = _response_data[_response_data["topic"] == topic].iloc[0]
 
         reflection = random.choice(row["reflection"])
+
+        # Only add key phrase if it's meaningful (not a stop word)
         key_words = self._key_phrases(translated)
-        if key_words and topic != "general":
-            reflection += f" Especially with {random.choice(key_words)} on your mind."
+        if key_words and topic not in ("general", "positive"):
+            kw = random.choice(key_words)
+            templates = [
+                f"Especially with {kw}.",
+                f"Especially around {kw}.",
+                f"When it comes to {kw}, that's real.",
+            ]
+            reflection += " " + random.choice(templates)
 
         validation = random.choice(row["validation"])
         question = random.choice(row["question"])
 
+        # Short answer handling
         if self._is_short(text) and len(self.history) >= 3:
             for prev in reversed(self.history[:-1]):
                 if len(prev.split()) > 3:
-                    prev_topic, _ = self._predict(prev)
+                    prev_topic, _ = self._predict_with_mood_override(prev)
                     prev_row = _response_data[_response_data["topic"] == prev_topic].iloc[0]
-                    ref = random.choice(prev_row["reflection"])
-                    end = random.choice(prev_row["soft_ending"])
-                    return f"{ref} You don't have to find the perfect words. Take your time."
-            return f"It's okay not to know exactly what to say. {random.choice(row['soft_ending'])}"
+                    return f"{random.choice(prev_row['reflection'])} Take your time."
+            return f"It's okay not to know what to say. {random.choice(row['soft_ending'])}"
 
-        parts = [reflection]
-        if validation:
-            parts.append(validation)
-
-        secondary = self._detect_emotions(translated)
-        if secondary and secondary[0] != topic and random.random() < 0.3:
-            parts.append("And it sounds like there's some of that too.")
-
-        if random.random() < 0.25:
-            parts.append(random.choice(row["soft_ending"]))
-        else:
+        # Build response - sometimes shorter, sometimes fuller
+        roll = random.random()
+        if roll < 0.2:
+            # Very short: just reflection + soft ending
+            return f"{reflection} {random.choice(row['soft_ending'])}"
+        elif roll < 0.5:
+            # Short: reflection + question
+            return f"{reflection} {question}"
+        elif roll < 0.7:
+            # Full: reflection + validation + question
+            parts = [reflection]
+            if validation:
+                parts.append(validation)
             parts.append(question)
-
-        return " ".join(parts)
+            return " ".join(parts)
+        else:
+            # Full with possible secondary emotion
+            parts = [reflection]
+            if validation:
+                parts.append(validation)
+            secondary = self._detect_emotions(translated)
+            if secondary and secondary[0] != topic and random.random() < 0.3:
+                parts.append("There might be some of that mixed in too.")
+            parts.append(question)
+            return " ".join(parts)
 
     def goodbye(self):
         return (f"{self.user_name or 'Friend'}, thank you for talking with me. "
@@ -280,7 +340,7 @@ class Counselor:
 
 
 if __name__ == "__main__":
-    import sys, time
+    import sys
     bot = Counselor()
     print(bot.greet(), "\n")
     while True:
