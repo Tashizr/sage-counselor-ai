@@ -283,7 +283,9 @@ class Counselor:
 
     def _key_phrases(self, text):
         words = [w.strip(",.!?;:'\"") for w in text.lower().split()
-                 if w.strip(",.!?;:'\"") not in STOP_WORDS and len(w.strip(",.!?;:'\"")) > 2]
+                 if w.strip(",.!?;:'\"") not in STOP_WORDS
+                 and len(w.strip(",.!?;:'\"")) > 2
+                 and w.strip(",.!?;:'\"").lower() != (self.user_name or "").lower()]
         random.shuffle(words)
         return words[:2]
 
