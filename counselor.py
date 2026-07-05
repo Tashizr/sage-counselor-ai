@@ -114,12 +114,18 @@ MOOD_MAP = {
 
 NAME_PATTERNS = [
     r"my\s+name(?:'s|\s+is)\s+(.+)",
-    r"i(?:'|'?\s*|\s+)m\s+(.+)",
+    r"i(?:'|'?\s*)\s*m\s+(.+)",
     r"i\s+am\s+(.+)",
     r"call\s+me\s+(.+)",
     r"you\s+can\s+call\s+me\s+(.+)",
     r"the\s+name(?:'s|\s+is)\s+(.+)",
     r"it(?:'s|\s+is)\s+(.+)",
+    r"sup\s+im\s+(.+)",
+    r"hey\s+im\s+(.+)",
+    r"hi\s+im\s+(.+)",
+    r"hello\s+im\s+(.+)",
+    r"yo\s+im\s+(.+)",
+    r"im\s+([a-z]{2,})\b",
 ]
 
 EMOTION_SKIP = {
@@ -204,9 +210,12 @@ class Counselor:
                 self.user_name = name
                 return f"Hi, {name}! It's nice to meet you. I'm SAGE. What's been on your mind?"
             words = text.split()
-            if len(words) <= 3 and not self._is_counseling(text):
-                self.user_name = words[0].strip(",.!?")
-                return f"Hi, {self.user_name}! It's nice to meet you. I'm SAGE. What would you like to talk about?"
+            # If it's short and doesn't look like counseling, treat first word as name
+            if len(words) <= 4 and not self._is_counseling(text):
+                candidate = words[-1].strip(",.!?")
+                if len(candidate) >= 2 and candidate.lower() not in EMOTION_SKIP:
+                    self.user_name = candidate.title()
+                    return f"Hi, {self.user_name}! It's nice to meet you. I'm SAGE. What would you like to talk about?"
             self.user_name = "Friend"
 
         return self._generate(text)
