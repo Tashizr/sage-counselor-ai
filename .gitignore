@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+Thumbs.db
+node_modules/
+.idea/
+.vscode/
+SAGE_Step_by_Step_Guide.pptx
+dataset/sage_massive_training.jsonl
+dataset/compress.py

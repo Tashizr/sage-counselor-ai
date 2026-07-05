@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F1115">
+<title>SAGE - AI Counselor</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="safety-bar" id="safety-bar">
+  <div class="safety-bar-inner">
+    <span class="safety-bar-text">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      In danger? Call <strong>911</strong> or <a href="tel:988">988 Suicide &amp; Crisis Lifeline</a>
+    </span>
+    <a href="tel:988" class="safety-help-btn">Get Help</a>
+    <button class="safety-dismiss" id="safety-dismiss" aria-label="Dismiss">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="app-layout">
+  <main class="main-content">
+    <header class="chat-header">
+      <div class="chat-header-brand">
+        <div class="chat-header-logo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+        <span class="chat-header-title">SAGE</span>
+      </div>
+      <div class="chat-header-right">
+        <div class="encrypted-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Private
+        </div>
+        <button class="header-icon-btn" id="export-btn" title="Export" aria-label="Export">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="chat-area" id="chat-area">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+        <h2 class="empty-state-title">You're Not Alone</h2>
+        <p class="empty-state-subtitle">A safe space to talk, breathe, and find support.</p>
+        <div class="suggestion-cards">
+          <button class="suggestion-card" data-message="I'm feeling anxious">
+            <div class="suggestion-card-icon">&#128552;</div>
+            <span class="suggestion-card-text">I'm feeling anxious</span>
+          </button>
+          <button class="suggestion-card" data-message="I need someone to listen">
+            <div class="suggestion-card-icon">&#128066;</div>
+            <span class="suggestion-card-text">I need someone to listen</span>
+          </button>
+          <button class="suggestion-card" data-message="Help me calm down">
+            <div class="suggestion-card-icon">&#128154;</div>
+            <span class="suggestion-card-text">Help me calm down</span>
+          </button>
+          <button class="suggestion-card" data-message="I'm going through a breakup">
+            <div class="suggestion-card-icon">&#128148;</div>
+            <span class="suggestion-card-text">I'm going through a breakup</span>
+          </button>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-chips" id="input-chips">
+        <button class="input-chip" data-action="breathe">&#128168; Breathe</button>
+        <button class="input-chip" data-action="mood">&#128522; Mood</button>
+        <button class="input-chip" data-action="crisis">&#128737; Crisis Help</button>
+        <button class="input-chip" data-action="ground">&#127793; Ground Me</button>
+      </div>
+      <div class="input-container">
+        <textarea class="text-input" id="text-input" placeholder="Share what's on your mind..." rows="1" autofocus></textarea>
+        <button class="send-btn" id="send-btn" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      SAGE may make mistakes and is not a substitute for professional mental health care.
+      <span class="footer-crisis">In crisis? Call <a href="tel:988">988</a></span>
+    </div>
+  </main>
+</div>
+
+<!-- Breathing Modal -->
+<div class="modal-overlay" id="breathing-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Breathing Exercise</h3>
+      <button class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="breathing-circle" id="breathing-circle">
+        <div class="breathing-ring"></div>
+        <span class="breathing-text" id="breathing-text">Breathe In</span>
+      </div>
+      <p class="breathing-instruction" id="breathing-instruction">Follow the circle. Breathe in as it expands, out as it contracts.</p>
+      <button class="breathing-start-btn" id="breathing-start">Start Exercise</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mood Modal -->
+<div class="modal-overlay" id="mood-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>How are you feeling?</h3>
+      <button class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mood-grid">
+        <button class="mood-option" data-mood="great"><span class="mood-emoji">&#128525;</span><span class="mood-label">Great</span></button>
+        <button class="mood-option" data-mood="good"><span class="mood-emoji">&#128522;</span><span class="mood-label">Good</span></button>
+        <button class="mood-option" data-mood="okay"><span class="mood-emoji">&#128528;</span><span class="mood-label">Okay</span></button>
+        <button class="mood-option" data-mood="low"><span class="mood-emoji">&#128532;</span><span class="mood-label">Low</span></button>
+        <button class="mood-option" data-mood="bad"><span class="mood-emoji">&#128542;</span><span class="mood-label">Bad</span></button>
+        <button class="mood-option" data-mood="awful"><span class="mood-emoji">&#128557;</span><span class="mood-label">Awful</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Grounding Modal -->
+<div class="modal-overlay" id="grounding-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>5-4-3-2-1 Grounding</h3>
+      <button class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="grounding-step">
+        <div class="grounding-number" id="grounding-number">5</div>
+        <p class="grounding-prompt" id="grounding-prompt">Name <strong>5 things</strong> you can <strong>see</strong>.</p>
+      </div>
+      <div class="grounding-progress"><div class="grounding-progress-bar" id="grounding-progress-bar"></div></div>
+      <button class="grounding-next-btn" id="grounding-next">I've noted them</button>
+    </div>
+  </div>
+</div>
+
+<!-- Crisis Modal -->
+<div class="modal-overlay" id="crisis-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Crisis Resources</h3>
+      <button class="modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="crisis-list">
+        <a href="tel:988" class="crisis-item"><div class="crisis-item-content"><span class="crisis-item-name">988 Suicide &amp; Crisis Lifeline</span><span class="crisis-item-detail">Call or text 988</span></div></a>
+        <a href="sms:741741&body=HOME" class="crisis-item"><div class="crisis-item-content"><span class="crisis-item-name">Crisis Text Line</span><span class="crisis-item-detail">Text HOME to 741741</span></div></a>
+        <a href="tel:911" class="crisis-item"><div class="crisis-item-content"><span class="crisis-item-name">Emergency Services</span><span class="crisis-item-detail">Call 911</span></div></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
