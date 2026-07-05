@@ -189,8 +189,8 @@ class Counselor:
             orig = self.awaiting
             self.awaiting = None
             low = text.lower()
-            if any(w in low for w in {"nah", "no", "fictional", "hypothetical", "story", "pretend", "made up", "joking", "joke", "not real"}):
-                return "Got it, no worries. What's really on your mind?"
+            if any(w in low for w in {"nah", "no", "fictional", "hypothetical", "story", "pretend", "made up", "joking", "joke", "not real", "in a game", "game", "roleplay", "rp"}):
+                return f"Got it, no worries. {random.choice(['What else is on your mind?', 'What would you like to talk about?', 'What brings you here today?'])}"
             if any(w in low for w in {"real", "yes", "actually", "happened", "serious", "fr", "deadass"}) and len(low.split()) < 8:
                 return f"Thank you for being honest with me.\n\n{self._generate(orig)}"
             return self._generate(text)
@@ -282,8 +282,17 @@ class Counselor:
         return found[:2]
 
     def _key_phrases(self, text):
+        generic = {"game", "things", "thing", "stuff", "something", "everything",
+                    "nothing", "anything", "someone", "everyone", "somewhere",
+                    "person", "people", "place", "time", "day", "night", "today",
+                    "yesterday", "tomorrow", "week", "month", "year", "life",
+                    "world", "lot", "bit", "way", "kind", "sort", "type",
+                    "happened", "happening", "going", "done", "said", "told",
+                    "talk", "share", "tell", "speak", "say", "feel", "think",
+                    "know", "want", "need", "like", "love", "hate"}
         words = [w.strip(",.!?;:'\"") for w in text.lower().split()
                  if w.strip(",.!?;:'\"") not in STOP_WORDS
+                 and w.strip(",.!?;:'\"") not in generic
                  and len(w.strip(",.!?;:'\"")) > 2
                  and w.strip(",.!?;:'\"").lower() != (self.user_name or "").lower()]
         random.shuffle(words)
