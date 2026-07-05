@@ -278,12 +278,21 @@ class Counselor:
         random.shuffle(words)
         return words[:2]
 
+    def _maybe_add_name(self, sentence):
+        """Optionally prepend the user's name to a sentence for a personal touch."""
+        if not self.user_name or self.user_name == "Friend":
+            return sentence
+        if random.random() > 0.4:
+            return sentence
+        prefix = random.choice([f"{self.user_name}, ", f"Hey {self.user_name}, "])
+        return prefix + sentence[0].lower() + sentence[1:]
+
     def _generate(self, text):
         translated = self._translate_slang(text)
         topic, _ = self._predict_with_mood_override(translated)
         row = _response_data[_response_data["topic"] == topic].iloc[0]
 
-        reflection = random.choice(row["reflection"])
+        reflection = self._maybe_add_name(random.choice(row["reflection"]))
 
         # Only add key phrase if it's meaningful (not a stop word)
         key_words = self._key_phrases(translated)
@@ -305,26 +314,22 @@ class Counselor:
                 if len(prev.split()) > 3:
                     prev_topic, _ = self._predict_with_mood_override(prev)
                     prev_row = _response_data[_response_data["topic"] == prev_topic].iloc[0]
-                    return f"{random.choice(prev_row['reflection'])} Take your time."
+                    return f"{self._maybe_add_name(random.choice(prev_row['reflection']))} Take your time."
             return f"It's okay not to know what to say. {random.choice(row['soft_ending'])}"
 
         # Build response - sometimes shorter, sometimes fuller
         roll = random.random()
         if roll < 0.2:
-            # Very short: just reflection + soft ending
             return f"{reflection} {random.choice(row['soft_ending'])}"
         elif roll < 0.5:
-            # Short: reflection + question
             return f"{reflection} {question}"
         elif roll < 0.7:
-            # Full: reflection + validation + question
             parts = [reflection]
             if validation:
                 parts.append(validation)
             parts.append(question)
             return " ".join(parts)
         else:
-            # Full with possible secondary emotion
             parts = [reflection]
             if validation:
                 parts.append(validation)
